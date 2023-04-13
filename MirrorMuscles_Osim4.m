@@ -1,18 +1,19 @@
 clear;clc
 import org.opensim.modeling.*
 
-modelPath = 'C:\Users\dpolet\Dropbox\Osim Models Private\Mussaurus\Mussaurus_Base_Model4-4.2.osim';
-modelNewPath = '';% leave blank to make new file in same directory as modelPath with "_Mirror" appended.
-modelNewName = 'Mussaurus_LRmuscles'; % leave blank to preserve name from old model
+modelPath = 'C:\GBW_MyPrograms\PredSim_dinosaurs\Subjects\Coelophysis dinosaur 2023\Coelophysis_Model_4.2_new_toMirror.osim';
+modelNewPath = 'C:\GBW_MyPrograms\PredSim_dinosaurs\Subjects\Coelophysis dinosaur 2023\Coelophysis_Model_4.2_new.osim'; % leave blank to make new file in same directory as modelPath with "_Mirror" appended.
+modelNewName = 'Coelophysis_LRmuscles'; % leave blank to preserve name from old model
 parameterFile = '';
 saveParameters = true;
 loadParameters = false;
 
-defaultSymAxis = [-1 -1 -1];
-bodySymAxis.Body = [1 -1 1];
-bodySymAxis.Proximal_tail = [1 1 -1];
-bodySymAxis.Distal_tail = [1 1 -1];
-midlineBodyList = {'Body','Proximal_tail','Distal_tail'};
+defaultSymAxis = [1 1 -1];
+bodySymAxis = [];
+% bodySymAxis.Body = [1 -1 1];
+% bodySymAxis.Proximal_tail = [1 1 -1];
+% bodySymAxis.Distal_tail = [1 1 -1];
+midlineBodyList = {'Body','Thorax','Proximal_tail','Distal_tail','Neck_head'};
 
 
 %%
@@ -140,19 +141,21 @@ end
 
 %% iterate through muscles
 
-nMuscles = model.getForceSet.getSize;
+nMuscles = model.getMuscles.getSize;
+nForces = model.getForceSet.getSize;
 for ii = 0:nMuscles-1
     forces = model.getForceSet();
-    muscleRight = forces.get(ii);
+    muscles = model.getMuscles();
+    muscleRight = muscles.get(ii);
     forces.cloneAndAppend(muscleRight); % duplicate muscle and add to the force set.
     muscleLeft = ... % retrieve new muscle in matlab-safe version.
         Millard2012EquilibriumMuscle.safeDownCast(forces.get(model.getForceSet.getSize-1));
     muscleRight = ... % also retrieve right muscle in derived class
         Millard2012EquilibriumMuscle.safeDownCast(muscleRight);
-    muscleoldname = muscleRight.getName().string;
-    musclenewname = ['L',muscleoldname{1}(2:end)];
+    muscleoldname = char(muscleRight.getName());
+    musclenewname = ['L',muscleoldname(2:end)];
     muscleLeft.setName(musclenewname);
-    disp(['---New muscle ',musclenewname,' cloned from ',muscleoldname{:},'---'])
+    disp(['---New muscle ',musclenewname,' cloned from ',muscleoldname,'---'])
     
     %%% Get the geometry path
     geomPath = muscleLeft.updGeometryPath();%muscle2.getPropertyByName('GeometryPath');
@@ -161,7 +164,7 @@ for ii = 0:nMuscles-1
     
     for i = 0:nPP-1
         pathPoint = geomPath.getPathPointSet().getPropertyByIndex(0).getValueAsObject(i);
-        ppName = cell2mat(pathPoint.getName.string);
+        ppName = char(pathPoint.getName());
         ppBody = ... % gets the parent body and removes the affix '/bodyset/'
             strrep(cell2mat(pathPoint.getPropertyByName('socket_parent_frame').string),'/bodyset/','');
         ppLoc = cell2mat(pathPoint.getPropertyByName('location').string);
