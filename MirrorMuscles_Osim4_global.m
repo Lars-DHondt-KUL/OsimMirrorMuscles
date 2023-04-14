@@ -9,10 +9,6 @@ saveParameters = true;
 loadParameters = false;
 
 defaultSymAxis = [1 1 -1];
-bodySymAxis = [];
-bodySymAxis.Body = [1 -1 1];
-% bodySymAxis.Proximal_tail = [1 1 -1];
-% bodySymAxis.Distal_tail = [1 1 -1];
 midlineBodyList = {'Body','Thorax','Proximal_tail','Distal_tail','Neck_head'};
 
 
@@ -108,29 +104,40 @@ for ii = 0:nBodies-1
         
         transOld = wrapObj.get_translation().string;
         transOldMat = str2num(transOld{1}(3:end-1));
+        transOldMat_global = body.findStationLocationInGround(state,mat2Vec3(transOldMat)).getAsMat;
         mirror = defaultSymAxis;
-        if isfield(bodySymAxis,bodyName)
-            mirror = bodySymAxis.(bodyName); % use given value if provided
-        end
-        transNewMat = transOldMat.*mirror;
+
+        transNewMat_global = transOldMat_global.*mirror(:);
+        transNewMat = model.getGround().findStationLocationInAnotherFrame(state,mat2Vec3(transNewMat_global),bodyAttach.findBaseFrame()).getAsMat;
         wrapObj2.set_translation(mat2Vec3(transNewMat));
         
         rotOld = wrapObj.get_xyz_body_rotation().string;
         rotOldMat = str2num(rotOld{1}(3:end-1));
-        rotNewMat = rotOldMat.*-mirror;
+
+        % rotation matrix of wrap in body
+        rotmOld_wrap_body = eul2rotm(rotOldMat,'XYZ');
+        % rotation matrix of body in global
+        rotmOld_body_global = Mat33ToDouble(body.getTransformInGround(state).R().asMat33());
+        % rotation matrix of wrap in global
+        rotmOld_wrap_global = rotmOld_body_global*rotmOld_wrap_body;
+        % Euler angles of wrap in global
+        rotOld_wrap_global = rotm2eul(rotmOld_wrap_global,'XYZ');
+        % Euler angles of mirrored wrap in global
+        rot_wrap_global = rotOld_wrap_global.*(-mirror);
+        % rotation matrix of mirrored wrap in global
+        rotm_wrap_global = eul2rotm(rot_wrap_global,'XYZ');
+        % rotation matrix of mirror body in global
+        rotm_body_global = Mat33ToDouble(bodyAttach.getTransformInGround(state).R().asMat33());
+        % rotation matrix of mirrored wrap in body
+        rotm_wrap_body = rotm_body_global'*rotm_wrap_global;
+        % Euler angles of mirrored wrap in body
+        rot_wrap_body = rotm2eul(rotm_wrap_body,'XYZ');
+        rotNewMat = rot_wrap_body;
+
         wrapObj2.set_xyz_body_rotation(mat2Vec3(rotNewMat));
         
         quadOld = cell2mat(wrapObj.get_quadrant.string);
-        switch quadOld(1)
-            case 'a'
-                quadNew = 'all';
-            case '-'
-                quadNew = quadOld(2);
-            case '+'
-                quadNew = ['-',quadOld(2)];
-            otherwise
-                quadNew = ['-',quadOld];
-        end
+        quadNew = quadOld;
         wrapObj2.set_quadrant(quadNew);
         
         bodyAttach.addWrapObject(wrapObj2)
@@ -170,16 +177,18 @@ for ii = 0:nMuscles-1
         ppLoc = cell2mat(pathPoint.getPropertyByName('location').string);
         
         mirror = defaultSymAxis;
-        if isfield(bodySymAxis,ppBody)
-            mirror = bodySymAxis.(ppBody); % use given value if provided
-        end
+
         if any(strcmp(ppBody,midlineBodyList))
             ppNewBody = ppBody;
         else
             ppNewBody = ['L',ppBody(2:end)];
         end
         ppLocMat = str2num(ppLoc(2:end-1));
-        ppNewLocMat = ppLocMat.*mirror; % flips the sign of one of the values
+
+        ppLocMat_global = bodySet.get(ppBody).findStationLocationInGround(state,mat2Vec3(ppLocMat)).getAsMat();
+
+        ppNewLocMat_global = ppLocMat_global.*mirror(:); % flips the sign of one of the values
+        ppNewLocMat = model.getGround().findStationLocationInAnotherFrame(state,mat2Vec3(ppNewLocMat_global),bodySet.get(ppNewBody).findBaseFrame()).getAsMat;
         ppNewName = ppName;
         if strcmpi(ppName(1),'r')
             ppNewName = ['l',ppName(2:end)];
