@@ -1,11 +1,11 @@
 clear;clc
 import org.opensim.modeling.*
 
-modelPath = 'C:\GBW_MyPrograms\PredSim_dinosaurs\Subjects\Marasuchus mirror model\Marasuchus_Model_44_A_toMirror_NoLWraps.osim';
+modelPath = 'C:\Users\u0150099\Downloads/Coelophysis_Model41_newmusc_tomirror.osim';
 modelNewPath = []; % leave blank to make new file in same directory as modelPath with "_Mirror" appended.
 modelNewName = []; % leave blank to preserve name from old model
 parameterFile = '';
-saveParameters = true;
+saveParameters = false;
 loadParameters = false;
 
 defaultSymAxis = [1 1 -1];
@@ -114,6 +114,9 @@ for ii = 0:nBodies-1
         rotOld = wrapObj.get_xyz_body_rotation().string;
         rotOldMat = str2num(rotOld{1}(3:end-1));
 
+        quadOld = cell2mat(wrapObj.get_quadrant.string);
+        quadNew = quadOld;
+
         % rotation matrix of wrap in body
         rotmOld_wrap_body = eul2rotm(rotOldMat,'XYZ');
         % rotation matrix of body in global
@@ -124,6 +127,13 @@ for ii = 0:nBodies-1
         rotOld_wrap_global = rotm2eul(rotmOld_wrap_global,'XYZ');
         % Euler angles of mirrored wrap in global
         rot_wrap_global = rotOld_wrap_global.*(-mirror);
+
+        % band-aid fix
+        if mirror(3)==-1 && strcmp(quadNew,'z')
+            rot_wrap_global(2) = rot_wrap_global(2) + pi;
+            rot_wrap_global(3) = -rot_wrap_global(3);
+        end
+
         % rotation matrix of mirrored wrap in global
         rotm_wrap_global = eul2rotm(rot_wrap_global,'XYZ');
         % rotation matrix of mirror body in global
@@ -136,8 +146,7 @@ for ii = 0:nBodies-1
 
         wrapObj2.set_xyz_body_rotation(mat2Vec3(rotNewMat));
         
-        quadOld = cell2mat(wrapObj.get_quadrant.string);
-        quadNew = quadOld;
+
         wrapObj2.set_quadrant(quadNew);
         
         bodyAttach.addWrapObject(wrapObj2)
