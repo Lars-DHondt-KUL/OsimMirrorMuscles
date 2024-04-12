@@ -1,7 +1,7 @@
 clear;clc
 import org.opensim.modeling.*
 
-modelPath = 'C:\Users\u0150099\Downloads/Coelophysis_Model41_newmusc_tomirror.osim';
+modelPath = ''; % full path to .osim 
 modelNewPath = []; % leave blank to make new file in same directory as modelPath with "_Mirror" appended.
 modelNewName = []; % leave blank to preserve name from old model
 parameterFile = '';
@@ -88,7 +88,7 @@ for ii = 0:nBodies-1
         bodyAttachName = bodyName;
         bodyAttach = body;
     else
-        bodyAttachName = ['L',bodyName(2:end)];
+        bodyAttachName = mirrorName(bodyName);
         bodyAttach = bodySet.get(bodyAttachName);
     end
     
@@ -99,7 +99,7 @@ for ii = 0:nBodies-1
         
         wrapObj2 = wrapObj.clone();% duplicate wrap object
         nameOld = wrapObj.getName.string;
-        nameNew = ['l',nameOld{1}(2:end)]; % set as "left"
+        nameNew = mirrorName(nameOld{1}); % set as "left"
         wrapObj2.setName(nameNew);
         
         transOld = wrapObj.get_translation().string;
@@ -169,7 +169,7 @@ for ii = 0:nMuscles-1
     muscleRight = ... % also retrieve right muscle in derived class
         Millard2012EquilibriumMuscle.safeDownCast(muscleRight);
     muscleoldname = char(muscleRight.getName());
-    musclenewname = ['L',muscleoldname(2:end)];
+    musclenewname = mirrorName(muscleoldname);
     muscleLeft.setName(musclenewname);
     disp(['---New muscle ',musclenewname,' cloned from ',muscleoldname,'---'])
     
@@ -190,7 +190,7 @@ for ii = 0:nMuscles-1
         if any(strcmp(ppBody,midlineBodyList))
             ppNewBody = ppBody;
         else
-            ppNewBody = ['L',ppBody(2:end)];
+            ppNewBody = mirrorName(ppBody);
         end
         ppLocMat = str2num(ppLoc(2:end-1));
 
@@ -199,8 +199,9 @@ for ii = 0:nMuscles-1
         ppNewLocMat_global = ppLocMat_global.*mirror(:); % flips the sign of one of the values
         ppNewLocMat = model.getGround().findStationLocationInAnotherFrame(state,mat2Vec3(ppNewLocMat_global),bodySet.get(ppNewBody).findBaseFrame()).getAsMat;
         ppNewName = ppName;
-        if strcmpi(ppName(1),'r')
-            ppNewName = ['l',ppName(2:end)];
+        [ppNewName_l, ppNewName_r] = mirrorName(ppName);
+        if strcmpi(ppName,ppNewName_r)
+            ppNewName = ppNewName_l;
         end
         muscleLeft.addNewPathPoint(ppNewName,bodySet.get(ppNewBody),mat2Vec3(ppNewLocMat))
         disp(['New path point ',ppNewName,' added to ',musclenewname])
@@ -219,7 +220,7 @@ for ii = 0:nMuscles-1
     for i = 0:nWraps-1
         pathWrap = PathWrap().safeDownCast(wrapSet.getPropertyByName('objects').getValueAsObject(i));
         pathWrapName = cell2mat(pathWrap.get_wrap_object.string);
-        pathWrapNewName = ['l',pathWrapName(2:end)];
+        pathWrapNewName = mirrorName(pathWrapName);
         
         % duplicate wrap object
         wrapSet.cloneAndAppend(pathWrap);

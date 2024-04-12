@@ -65,7 +65,7 @@ right_name = [];
 % suffix
 for i=1:length(suffixA)
     nA = length(char(suffixA{i}));
-    if strcmp(original_name(end-nA+1:end),suffixA{i})
+    if length(original_name)>nA && strcmp(original_name(end-nA+1:end),suffixA{i})
         mirrored_name = [original_name(1:end-nA),suffixB{i}];
 
         if i<=length(optional_inputs.suffix_left)
@@ -81,8 +81,8 @@ end
 % prefix
 for i=1:length(prefixA)
     nA = length(prefixA{i});
-    if strcmp(original_name(1:nA),prefixA{i})
-        mirrored_name = [prefixB{i, original_name(nA+1:end)}];
+    if length(original_name)>nA && strcmp(original_name(1:nA),prefixA{i})
+        mirrored_name = [prefixB{i}, original_name(nA+1:end)];
 
         if i<=length(optional_inputs.suffix_left)
             left_name = original_name;
