@@ -49,13 +49,14 @@ for ii = 0:nBodies-1
     bodyName = cell2mat(body.getName.string);
     
     isMidlineBody = false;
+    [bodyName_l, bodyName_r] = mirrorName(bodyName);
     if any(strcmp(bodyName,midlineBodyList))
        isMidlineBody = true; 
        disp([bodyName,' identified as Midline Body'])
-    elseif strcmpi(bodyName(1),'R')
+    elseif strcmpi(bodyName, bodyName_r)
         isMidlineBody = false;
         disp([bodyName,' identified as Rightside Body'])
-    elseif strcmpi(bodyName(1),'L')
+    elseif strcmpi(bodyName, bodyName_l)
          disp([bodyName,' identified as Leftside Body'])
          continue % skip to the next iteration
     else
