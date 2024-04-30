@@ -165,10 +165,25 @@ for ii = 0:nMuscles-1
     muscles = model.getMuscles();
     muscleRight = muscles.get(ii);
     forces.cloneAndAppend(muscleRight); % duplicate muscle and add to the force set.
-    muscleLeft = ... % retrieve new muscle in matlab-safe version.
-        Millard2012EquilibriumMuscle.safeDownCast(forces.get(model.getForceSet.getSize-1));
-    muscleRight = ... % also retrieve right muscle in derived class
-        Millard2012EquilibriumMuscle.safeDownCast(muscleRight);
+    muscleClass = muscleLeft.getConcreteClassName();
+    switch true
+        case strcmp(muscleClass, Millard2012EquilibriumMuscle)
+            muscleLeft = ... % retrieve new muscle in matlab-safe version.
+                Millard2012EquilibriumMuscle.safeDownCast(forces.get(model.getForceSet.getSize-1));
+            muscleRight = ... % also retrieve right muscle in derived class
+                Millard2012EquilibriumMuscle.safeDownCast(muscleRight);
+
+        case strcmp(muscleClass, DeGrooteFregly2016Muscle)
+            % can first use DeGrooteFregly2016Muscle.replaceMuscles(model)
+            % https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1DeGrooteFregly2016Muscle.html#af728fc5ada2e3813ba150cc127e80805
+            muscleLeft = ... % retrieve new muscle in matlab-safe version.
+                DeGrooteFregly2016Muscle.safeDownCast(forces.get(model.getForceSet.getSize-1));
+            muscleRight = ... % also retrieve right muscle in derived class
+                DeGrooteFregly2016Muscle.safeDownCast(muscleRight);
+
+        otherwise
+            error(["Support for muscles of class '%s' is not implemented."], muscleClass)
+    end
     muscleoldname = char(muscleRight.getName());
     musclenewname = mirrorName(muscleoldname);
     muscleLeft.setName(musclenewname);
