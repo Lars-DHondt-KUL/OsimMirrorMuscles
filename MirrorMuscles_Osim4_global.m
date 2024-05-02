@@ -1,15 +1,15 @@
 clear;clc
 import org.opensim.modeling.*
 
-modelPath = ''; % full path to .osim 
-modelNewPath = []; % leave blank to make new file in same directory as modelPath with "_Mirror" appended.
+modelPath = 'C:\Users\u0150099\Downloads\GF_OneLegged_30042024_R_test3_1.osim'; % full path to .osim 
+modelNewPath = 'C:\Users\u0150099\Downloads\GF_OneLegged_30042024_R_test3_2.osim'; % leave blank to make new file in same directory as modelPath with "_Mirror" appended.
 modelNewName = []; % leave blank to preserve name from old model
 parameterFile = '';
 saveParameters = false;
 loadParameters = false;
 
 defaultSymAxis = [1 1 -1];
-midlineBodyList = {'Body','Thorax','Proximal_tail','Distal_tail','Neck_head'};
+midlineBodyList = {'pelvis'};
 
 
 %%
@@ -158,6 +158,7 @@ end
 
 %% iterate through muscles
 
+
 nMuscles = model.getMuscles.getSize;
 nForces = model.getForceSet.getSize;
 for ii = 0:nMuscles-1
@@ -165,15 +166,15 @@ for ii = 0:nMuscles-1
     muscles = model.getMuscles();
     muscleRight = muscles.get(ii);
     forces.cloneAndAppend(muscleRight); % duplicate muscle and add to the force set.
-    muscleClass = muscleLeft.getConcreteClassName();
+    muscleClass = muscleRight.getConcreteClassName();
     switch true
-        case strcmp(muscleClass, Millard2012EquilibriumMuscle)
+        case strcmp(muscleClass, 'Millard2012EquilibriumMuscle')
             muscleLeft = ... % retrieve new muscle in matlab-safe version.
                 Millard2012EquilibriumMuscle.safeDownCast(forces.get(model.getForceSet.getSize-1));
             muscleRight = ... % also retrieve right muscle in derived class
                 Millard2012EquilibriumMuscle.safeDownCast(muscleRight);
 
-        case strcmp(muscleClass, DeGrooteFregly2016Muscle)
+        case strcmp(muscleClass, 'DeGrooteFregly2016Muscle')
             % can first use DeGrooteFregly2016Muscle.replaceMuscles(model)
             % https://simtk.org/api_docs/opensim/api_docs/classOpenSim_1_1DeGrooteFregly2016Muscle.html#af728fc5ada2e3813ba150cc127e80805
             muscleLeft = ... % retrieve new muscle in matlab-safe version.
